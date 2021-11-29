@@ -10,7 +10,7 @@ export default function Form({ onSubmit }) {
 
   const handleSubmit = e => {
     e.preventDefault()
-    onSubmit(name, number);
+    onSubmit({ name, number });
     reset();
   }
 
@@ -20,6 +20,7 @@ export default function Form({ onSubmit }) {
   };
 
   const handleChange = e => {
+    console.log(e.target.value)
     const { name, value } = e.target
 
     switch (name) {

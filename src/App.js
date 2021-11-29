@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./App.css";
 
@@ -8,13 +8,24 @@ import { Filter } from "./components/Filter/Filter";
 import { Contacts } from "./components/Contacts/Contacts";
 import { nanoid } from "nanoid";
 
-export default function App() {
-  const [contacts, setContacts] = useState(() => {
-    return JSON.parse(window.localStorage.getItem('contacts')) ?? [];
+const useLocalStorage = (key, defaultVal) => {
+  const [state, setState] = useState(() => {
+    return JSON.parse(window.localStorage.getItem(key)) ?? defaultVal;
   });
+  useEffect(() => {
+    window.localStorage.setItem(key, JSON.stringify(state))
+  }, [key, state])
+  return [state, setState]
+}
+
+
+export default function App() {
+  const [contacts, setContacts] = useLocalStorage('contacts', []);
   const [filter, setFilter] = useState('');
 
-  const formSubmitHandler = (name, number) => {
+
+
+  const formSubmitHandler = ({ name, number }) => {
     const contact = {
       id: nanoid(),
       name,
@@ -26,14 +37,16 @@ export default function App() {
 
     findContact
       ? alert(`${name} is already in contacts!`)
-      : setContacts(prevState => [contact, ...prevState])
+      : setContacts(prevContacts => [...prevContacts, contact])
   }
+
+
   const onFilterChange = (e) => {
     setFilter(e.currentTarget.value);
   };
 
-  const newContacts = () => {
 
+  const newContacts = () => {
     const normalizedFilter = filter.toLowerCase();
     return contacts.filter((contact) =>
       contact.name.toLowerCase().includes(normalizedFilter)
@@ -41,18 +54,14 @@ export default function App() {
   };
 
   const deleteContact = (contactId) => {
-    setContacts(prevState => ({
-      contacts: prevState.contacts.filter(
-        (contact) => contact.id !== contactId
-      ),
-    }));
+    setContacts(prevContacts => (prevContacts.filter(contact => contact.id !== contactId)));
   };
 
   return (
     <div className="App">
       <Form onSubmit={formSubmitHandler} />
       <Filter value={filter} onChange={onFilterChange} />
-      <Contacts contacts={newContacts} deleteHandler={deleteContact} />
+      <Contacts contacts={newContacts()} deleteHandler={deleteContact} />
     </div>
   );
 }
